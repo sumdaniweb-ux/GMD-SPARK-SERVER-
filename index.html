@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>GMD Spark</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+  body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: all 0.5s ease; }
+  body.theme-dark { background: #0a0a0a; color: #e0e0e0; }
+  body.theme-dark header { background: #0a0a0a; }
+  body.theme-dark .input-wrapper { background: #1a1a1a; border-color: #333; }
+  body.theme-dark textarea { color: #fff; }
+  body.theme-dark .user-msg { background: #2a2a2a; }
+  body.theme-gold { background: #0d0b00; color: #FFD700; }
+  body.theme-gold header { background: #0d0b00; }
+  body.theme-gold .input-wrapper { background: #1a1500; border-color: #D4AF37; }
+  body.theme-gold textarea { color: #FFD700; }
+  body.theme-gold .user-msg { background: #2a2000; border-color: #D4AF37; }
+  body.theme-blue { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+  body.theme-blue header { background: transparent; }
+  body.theme-blue .input-wrapper { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); backdrop-filter: blur(10px); }
+  body.theme-blue textarea { color: #fff; }
+  body.theme-blue .user-msg { background: rgba(255,255,255,0.2); }
+  body.theme-green { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: #fff; }
+  body.theme-green header { background: transparent; }
+  body.theme-green .input-wrapper { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); backdrop-filter: blur(10px); }
+  body.theme-green textarea { color: #fff; }
+  body.theme-green .user-msg { background: rgba(255,255,255,0.2); }
+  header { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; border-bottom: 1px solid rgba(128,128,128,0.2); }
+  header h1 { font-size: 20px; font-weight: 600; }
+  .header-btns { display: flex; gap: 8px; align-items: center; }
+  .header-btn { background: none; border: 1px solid currentColor; padding: 6px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; color: inherit; transition: all 0.3s; }
+  .header-btn:hover { opacity: 0.7; }
+  #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+  .message { max-width: 75%; padding: 12px 18px; border-radius: 20px; font-size: 16px; line-height: 1.6; animation: fadeIn 0.3s ease; word-wrap: break-word; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .user-msg { align-self: flex-end; border: 1px solid rgba(128,128,128,0.3); }
+  .bot-msg { align-self: flex-start; }
+  footer { padding: 15px 20px 20px 20px; flex-shrink: 0; }
+  .input-wrapper { display: flex; align-items: center; gap: 10px; border: 1px solid rgba(128,128,128,0.3); border-radius: 30px; padding: 10px 15px; direction: ltr; }
+  .attach-btn { background: none; border: none; color: inherit; font-size: 22px; cursor: pointer; padding: 5px; flex-shrink: 0; opacity: 0.7; transition: opacity 0.3s; }
+  .attach-btn:hover { opacity: 1; }
+  textarea { flex: 1; background: transparent; border: none; font-size: 16px; resize: none; outline: none; max-height: 100px; direction: rtl; }
+  .send-btn { background: none; border: none; color: inherit; font-size: 24px; cursor: pointer; padding: 5px; flex-shrink: 0; transition: transform 0.2s; }
+  .send-btn:active { transform: scale(0.9); }
+  .file-preview { padding: 8px 20px; display: none; align-items: center; gap: 10px; font-size: 13px; opacity: 0.7; }
+  .file-preview.show { display: flex; }
+  .file-preview .remove-file { cursor: pointer; color: #f44; }
+  .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }  .modal.show { display: flex; }
+  .modal-content { background: #1a1a1a; color: #fff; border-radius: 20px; padding: 25px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+  .modal-header h2 { font-size: 20px; }
+  .close-modal { background: none; border: none; color: #fff; font-size: 28px; cursor: pointer; }
+  .theme-option { margin-bottom: 20px; }
+  .theme-option label { display: block; margin-bottom: 8px; font-size: 14px; color: #888; }
+  .color-input-wrapper { display: flex; align-items: center; gap: 10px; }
+  input[type="color"] { width: 50px; height: 40px; border: none; border-radius: 8px; cursor: pointer; }
+  input[type="text"] { flex: 1; padding: 10px; background: #2a2a2a; border: 1px solid #333; border-radius: 8px; color: #fff; font-family: monospace; }
+  .btn-save { width: 100%; padding: 12px; background: #4CAF50; color: #fff; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; margin-top: 10px; }
+  .saved-themes { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+  .saved-themes h3 { font-size: 16px; margin-bottom: 10px; color: #888; }
+  .theme-list { display: flex; flex-direction: column; gap: 8px; }
+  .theme-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #2a2a2a; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+  .theme-item:hover { background: #333; }
+  .theme-item.active { border: 2px solid #4CAF50; }
+  .theme-item-name { font-size: 14px; }
+  .theme-item-actions { display: flex; gap: 5px; }
+  .theme-item-actions button { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+  .btn-apply { background: #4CAF50; color: #fff; }
+  .btn-delete { background: #f44; color: #fff; }
+  .btn-export { background: #2196F3; color: #fff; }
+  .preview-box { margin-top: 15px; padding: 15px; border-radius: 10px; text-align: center; font-size: 14px; }
+  .typing-indicator { font-size: 13px; opacity: 0.7; padding: 10px 18px; }
+  .security-badge { font-size: 11px; opacity: 0.6; margin-right: 10px; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 2px; }
+</style>
+</head>
+<body class="theme-dark">
+
+<header>
+  <h1>GMD Spark</h1>
+  <div class="header-btns">
+    <span class="security-badge" id="securityBadge">🔐 SHA-256 Active</span>
+    <button class="header-btn" onclick="openThemeEditor()">🎨 تھیم</button>
+  </div>
+</header>
+
+<div id="chat-container">
+  <div class="message bot-msg">السلام علیکم! میں GMD Spark ہوں۔ آپ کیسے ہیں؟</div>
+</div>
+
+<div class="file-preview" id="filePreview">
+  <span id="fileInfo">فائل</span>
+  <span class="remove-file" onclick="removeFile()">×</span>
+</div>
+<footer>
+  <div class="input-wrapper">
+    <button class="attach-btn" onclick="document.getElementById('fileInput').click()">📎</button>
+    <input type="file" id="fileInput" style="display:none" onchange="handleFile(this)">
+    <textarea id="userInput" rows="1" placeholder="اینا پیغام لکھیں..."></textarea>
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</footer>
+
+<div class="modal" id="themeModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🎨 تھیم بنائیں</h2>
+      <button class="close-modal" onclick="closeThemeEditor()">×</button>
+    </div>
+    <div class="theme-option">
+      <label>تھیم کا نام:</label>
+      <input type="text" id="themeName" placeholder="مثال: میرا پسندیدہ تھیم">
+    </div>
+    <div class="theme-option">
+      <label>بیک گراؤنڈ رنگ:</label>
+      <div class="color-input-wrapper">
+        <input type="color" id="bgColor" value="#0a0a0a">
+        <input type="text" id="bgColorText" value="#0a0a0a">
+      </div>
+    </div>
+    <div class="theme-option">
+      <label>ٹیکسٹ رنگ:</label>
+      <div class="color-input-wrapper">
+        <input type="color" id="textColor" value="#e0e0e0">
+        <input type="text" id="textColorText" value="#e0e0e0">
+      </div>
+    </div>
+    <div class="theme-option">
+      <label>ان پٹ ایریا رنگ:</label>
+      <div class="color-input-wrapper">
+        <input type="color" id="inputBgColor" value="#1a1a1a">
+        <input type="text" id="inputBgColorText" value="#1a1a1a">
+      </div>
+    </div>
+    <div class="theme-option">
+      <label>یوزر میسج رنگ:</label>
+      <div class="color-input-wrapper">
+        <input type="color" id="userMsgColor" value="#2a2a2a">
+        <input type="text" id="userMsgColorText" value="#2a2a2a">
+      </div>
+    </div>
+    <div class="theme-option">
+      <label>بورڈر رنگ:</label>
+      <div class="color-input-wrapper">        <input type="color" id="borderColor" value="#333333">
+        <input type="text" id="borderColorText" value="#333333">
+      </div>
+    </div>
+    <button class="btn-save" onclick="saveCustomTheme()">💾 تھیم محفوظ کریں</button>
+    <div class="preview-box" id="themePreview">پیش نظارہ</div>
+    <div class="saved-themes">
+      <h3>محفوظ شدہ تھیمز:</h3>
+      <div class="theme-list" id="savedThemesList"></div>
+    </div>
+    <button class="btn-export" onclick="exportThemes()" style="margin-top: 10px; width: 100%;">📤 تھیمز ایکسپورٹ کریں</button>
+    <button class="btn-export" onclick="document.getElementById('importFile').click()" style="margin-top: 10px; width: 100%; background: #FF9800;">📥 تھیمز امپورٹ کریں</button>
+    <input type="file" id="importFile" style="display:none" accept=".json" onchange="importThemes(this)">
+  </div>
+</div>
+
+<script>
+  const chatContainer = document.getElementById('chat-container');
+  const userInput = document.getElementById('userInput');
+  const filePreview = document.getElementById('filePreview');
+  const fileInfo = document.getElementById('fileInfo');
+  const securityBadge = document.getElementById('securityBadge');
+  let currentFile = null;
+  const defaultThemes = ['theme-dark', 'theme-gold', 'theme-blue', 'theme-green'];
+  let currentTheme = 0;
+  let customThemes = JSON.parse(localStorage.getItem('gmdSparkThemes')) || [];
+
+  const GMD_CONFIG = {
+    API_URL: 'https://192.168.1.100:8080/api/chat',
+    API_KEY: '',
+    USE_API: true,
+    SHA256_ENABLED: true,
+    TIMEOUT_MS: 15000
+  };
+
+  async function sha256(msg) {
+    if (!GMD_CONFIG.SHA256_ENABLED) return '';
+    const buf = new TextEncoder().encode(msg);
+    const hash = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function sanitizeInput(t) { return t.replace(/[<>]/g, '').trim(); }
+
+  async function callSecureAPI(text, file) {
+    const payload = { message: sanitizeInput(text), timestamp: new Date().toISOString(), hash: await sha256(text), file: file ? { name: file.name, size: file.size } : null };
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), GMD_CONFIG.TIMEOUT_MS);
+    try {
+      const res = await fetch(GMD_CONFIG.API_URL, {        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...(GMD_CONFIG.API_KEY && { 'X-API-Key': GMD_CONFIG.API_KEY }) },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal
+      });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error('API Error');
+      const data = await res.json();
+      return data.reply || data.message || 'جواب موصول ہوا۔';
+    } catch (e) {
+      clearTimeout(timeout);
+      return null;
+    }
+  }
+
+  ['bgColor', 'textColor', 'inputBgColor', 'userMsgColor', 'borderColor'].forEach(id => {
+    const c = document.getElementById(id), t = document.getElementById(id + 'Text');
+    c.addEventListener('input', () => { t.value = c.value; updatePreview(); });
+    t.addEventListener('input', () => { if (/^#[0-9A-Fa-f]{6}$/.test(t.value)) { c.value = t.value; updatePreview(); } });
+  });
+
+  function updatePreview() {
+    const p = document.getElementById('themePreview');
+    p.style.background = document.getElementById('bgColor').value;
+    p.style.color = document.getElementById('textColor').value;
+    p.style.border = `1px solid ${document.getElementById('borderColor').value}`;
+  }
+
+  function openThemeEditor() { document.getElementById('themeModal').classList.add('show'); renderSavedThemes(); }
+  function closeThemeEditor() { document.getElementById('themeModal').classList.remove('show'); }
+
+  function saveCustomTheme() {
+    const name = document.getElementById('themeName').value.trim();
+    if (!name) { alert('براہ کرم تھیم کا نام درج کریں'); return; }
+    const theme = { name, id: 'custom-' + Date.now(), colors: { bg: document.getElementById('bgColor').value, text: document.getElementById('textColor').value, inputBg: document.getElementById('inputBgColor').value, userMsg: document.getElementById('userMsgColor').value, border: document.getElementById('borderColor').value } };
+    customThemes.push(theme);
+    localStorage.setItem('gmdSparkThemes', JSON.stringify(customThemes));
+    applyCustomTheme(theme);
+    renderSavedThemes();
+    document.getElementById('themeName').value = '';
+    alert('تھیم محفوظ ہو گیا!');
+  }
+
+  function applyCustomTheme(theme) {
+    document.body.className = '';
+    const s = document.createElement('style');
+    s.id = 'custom-theme-style';
+    s.textContent = `body{background:${theme.colors.bg};color:${theme.colors.text}}body header{background:${theme.colors.bg}}body .input-wrapper{background:${theme.colors.inputBg};border-color:${theme.colors.border}}body textarea{color:${theme.colors.text}}body .user-msg{background:${theme.colors.userMsg};border-color:${theme.colors.border}}body .bot-msg{background:transparent}`;
+    const old = document.getElementById('custom-theme-style');
+    if (old) old.remove();    document.head.appendChild(s);
+  }
+
+  function renderSavedThemes() {
+    const list = document.getElementById('savedThemesList');
+    list.innerHTML = '';
+    customThemes.forEach(t => {
+      const item = document.createElement('div');
+      item.className = 'theme-item';
+      item.innerHTML = `<span class="theme-item-name">${t.name}</span><div class="theme-item-actions"><button class="btn-apply" onclick="applySavedTheme('${t.id}')">لگائیں</button><button class="btn-delete" onclick="deleteTheme('${t.id}')">حذف</button></div>`;
+      list.appendChild(item);
+    });
+  }
+
+  function applySavedTheme(id) { const t = customThemes.find(x => x.id === id); if (t) applyCustomTheme(t); }
+  function deleteTheme(id) { if (confirm('حذف کریں؟')) { customThemes = customThemes.filter(x => x.id !== id); localStorage.setItem('gmdSparkThemes', JSON.stringify(customThemes)); renderSavedThemes(); } }
+  function exportThemes() { const b = new Blob([JSON.stringify(customThemes, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'gmd-spark-themes.json'; a.click(); }
+  function importThemes(inp) { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = e => { try { customThemes = [...customThemes, ...JSON.parse(e.target.result)]; localStorage.setItem('gmdSparkThemes', JSON.stringify(customThemes)); renderSavedThemes(); alert('امپورٹ ہو گیا!'); } catch { alert('غلط فائل'); } }; r.readAsText(f); }
+
+  userInput.addEventListener('keypress', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+  userInput.addEventListener('input', function () { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
+
+  function handleFile(inp) { if (inp.files && inp.files[0]) { currentFile = inp.files[0]; fileInfo.textContent = '📎 ' + currentFile.name; filePreview.classList.add('show'); } }
+  function removeFile() { currentFile = null; document.getElementById('fileInput').value = ''; filePreview.classList.remove('show'); }
+
+  function addMessage(text, cls) { const d = document.createElement('div'); d.className = `message ${cls}`; d.textContent = text; chatContainer.appendChild(d); }
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text && !currentFile) return;
+    if (text) addMessage(text, 'user-msg');
+    if (currentFile) { const f = document.createElement('div'); f.className = 'message user-msg'; f.textContent = '📎 ' + currentFile.name; chatContainer.appendChild(f); }
+    userInput.value = ''; userInput.style.height = 'auto'; removeFile(); chatContainer.scrollTop = chatContainer.scrollHeight;
+    const typing = document.createElement('div'); typing.className = 'typing-indicator bot-msg'; typing.textContent = 'لکھ رہا ہے...'; typing.id = 'typingIndicator'; chatContainer.appendChild(typing);
+    try {
+      let reply = GMD_CONFIG.USE_API ? await callSecureAPI(text, currentFile) : null;
+      if (!reply) { reply = getBotReply(text); if (securityBadge) securityBadge.textContent = '🔓 Local Mode'; }
+      document.getElementById('typingIndicator')?.remove();
+      addMessage(reply, 'bot-msg');
+    } catch (e) { document.getElementById('typingIndicator')?.remove(); addMessage('معاف کیجئے، تکنیکی مسئلہ پیش آ گیا۔', 'bot-msg'); }
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function getBotReply(input) {
+    input = (input || '').toLowerCase();
+    if (input.includes('سلام') || input.includes('hi')) return 'وعلیکم السلام! کیسے ہیں آپ؟';
+    if (input.includes('کیسے ہو')) return 'میں بالکل ٹھیک ہوں، آپ سنائیں؟';
+    if (input.includes('نام')) return 'میرا نام GMD Spark ہے۔';
+    return 'میں ابھی سیکھ رہا ہوں، لیکن آپ کا ساتھ بہت اچھا لگ رہا ہے!';
+  }
+  document.getElementById('themeModal').addEventListener('click', e => { if (e.target.id === 'themeModal') closeThemeEditor(); });
+  if (securityBadge && GMD_CONFIG.SHA256_ENABLED) securityBadge.textContent = '🔐 SHA-256 Active';
+</script>
+</body>
+</html>

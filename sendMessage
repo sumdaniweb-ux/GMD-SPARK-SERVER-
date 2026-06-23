@@ -1,0 +1,15 @@
+async function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text && !currentFile) return;
+  if (text) addMessage(text, 'user-msg');
+  if (currentFile) { const fm = document.createElement('div'); fm.className='message user-msg'; fm.textContent='📎 '+currentFile.name; chatContainer.appendChild(fm); }
+  userInput.value=''; userInput.style.height='auto'; removeFile(); chatContainer.scrollTop = chatContainer.scrollHeight;
+  const typing = document.createElement('div'); typing.className='typing-indicator bot-msg'; typing.textContent='لکھ رہا ہے...'; typing.id='typingIndicator'; chatContainer.appendChild(typing);
+  try {
+    let reply = GMD_CONFIG.USE_API ? await callSecureAPI(text, currentFile) : null;
+    if (!reply) { reply = getBotReply(text); if(document.getElementById('securityBadge')) document.getElementById('securityBadge').textContent='🔓 Local Mode'; }
+    document.getElementById('typingIndicator')?.remove();
+    addMessage(reply, 'bot-msg');
+  } catch(e) { document.getElementById('typingIndicator')?.remove(); addMessage('معاف کیجئے، تکنیکی مسئلہ پیش آ گیا۔', 'bot-msg'); }
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
